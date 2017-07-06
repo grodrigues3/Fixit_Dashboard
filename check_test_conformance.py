@@ -3,6 +3,12 @@ import sys
 import os, pdb
 from collections import defaultdict
 import time 
+import re
+
+def getSigList():
+    with open("sigList.txt", "r") as f:
+        sigSet = set([s.strip() for s in f])
+    return sigSet
 
 def parse_test_owners(k8s_root_dir, print_stats=False):
     """
@@ -35,7 +41,8 @@ def find_tests(k8s_root_dir):
         tokens = line.split()
         loc = tokens[0]
         if loc.startswith(os.path.join(k8s_root_dir, "test/e2e")):
-            fNames.add(loc)
+            end_ind = loc.find(":") #this gives the line where the test starts
+            fNames.add(loc[:end_ind])
     if False:
         print len(fNames)
         raw_input("waiting")
@@ -44,8 +51,20 @@ def find_tests(k8s_root_dir):
    
 def split_tests(testFiles):
     start = time.time()
-
+    hasOwner, needsOwner = set(), set()
+    sigs = getSigList()
+    for tF in testFiles:
+        with open(tF, 'r') as f:
+            matcher = re.compile(r"^//\s?OWNER\s?=\s?sig/(.+)", re.MULTILINE)
+            this = matcher.search(f.read())
+            if this and this.groups()[0] in sigs:
+                hasOwner.add(tF)
+            else:
+                needsOwner.add(tF)
+    print "Has Owners", len(hasOwner)
+    print "Needs Owners", len(needsOwner)
     print time.time() - start, ' second have elapsed'
+    return hasOwner, needsOwner
 
 
 def main():
@@ -54,7 +73,10 @@ def main():
         print "Provide the full path to the kubernetes root dir"
         exit()
     path = args[1]
-    find_tests(path)
+    testFile = os.path.join(path, "test/e2e/addon_update.go") 
+    tests = find_tests(path)
+    #split_tests(set([testFile]))    
+    split_tests(tests)    
 
 if __name__ == "__main__":
     main()
