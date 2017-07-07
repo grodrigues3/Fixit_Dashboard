@@ -31,40 +31,49 @@ def find_tests(k8s_root_dir):
     """
         find all the e2e tests in the Kubernetes directory
     """
+    # just reuse the existing tooling that test infra wrote to get all tests
     cmd = "go run " + os.path.join(k8s_root_dir, "test/list/main.go")
     cmd += " " + k8s_root_dir
-    print cmd
     out = os.popen(cmd).readlines()
+
+    
     fNames = set()
+    testNames = set()
     for line in out:
         line = line.strip()[1:-1]
         tokens = line.split()
         loc = tokens[0]
         if loc.startswith(os.path.join(k8s_root_dir, "test/e2e")):
+            testName = " ".join(tokens[2:])
             end_ind = loc.find(":") #this gives the line where the test starts
+            testNames.add(testName)
             fNames.add(loc[:end_ind])
-    if False:
-        print len(fNames)
-        raw_input("waiting")
-        print fNames
-    return fNames
+    if True:
+        print "Total Files {}\tTotal Tests {}".format(len(fNames), len(testNames))
+        # raw_input("waiting")
+        # print fNames
+        # print list(testNames)[:10]
+    return fNames, testNames
    
 def split_tests(testFiles):
     start = time.time()
     hasOwner, needsOwner = set(), set()
     sigs = getSigList()
+    ownerMap = defaultdict(set)
     for tF in testFiles:
         with open(tF, 'r') as f:
             matcher = re.compile(r"^//\s?OWNER\s?=\s?sig/(.+)", re.MULTILINE)
             this = matcher.search(f.read())
             if this and this.groups()[0] in sigs:
+                sig = this.groups()[0]
+                ownerMap[sig].add(tF)
                 hasOwner.add(tF)
             else:
                 needsOwner.add(tF)
-    print "Has Owners", len(hasOwner)
-    print "Needs Owners", len(needsOwner)
+    print "{} files have Owners".format(len(hasOwner))
+    print "{} fies need Owners".format(len(needsOwner))
     print time.time() - start, ' second have elapsed'
-    return hasOwner, needsOwner
+    return hasOwner, needsOwner, ownerMap
 
 
 def main():
@@ -73,10 +82,18 @@ def main():
         print "Provide the full path to the kubernetes root dir"
         exit()
     path = args[1]
+    sigMap = parse_test_owners(path)
     testFile = os.path.join(path, "test/e2e/addon_update.go") 
-    tests = find_tests(path)
+    testFiles, testNames = find_tests(path)
+    fromSigMap = set().union(*sigMap.values())
+    inBoth = testNames.intersection(fromSigMap)
+    print "Number of e2e files: {}".format(len(testFiles))
+    print "Number of tests from list/main.go: {}".format(len(testNames))
+    print "Number of tests from test_owners.csv: {}".format(len(fromSigMap))
+    print "Overlap between the two {} ".format(len(inBoth))
     #split_tests(set([testFile]))    
-    split_tests(tests)    
+    hasOwner, needsOwner, ownerMap = split_tests(testFiles)    
+    pdb.set_trace()
 
 if __name__ == "__main__":
     main()
