@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }}
+  {% endif %}
+
+    <h2> e2e Tests Still Needing Ownership</h2>
+    <ul>
+    <li><table >
+        <tr>
+            <th> </th>
+            <th>Backlog of Test Files</th>
+        </tr>
+        {% set count = 1 %}
+        {% for testName in notOwned %}
+            <tr> 
+                <td>{{ count }} </td>
+                <td>{{ testName }} </td>
+                {% set count = count + 1 %}
+            </tr>
+
+        {% endfor %}
+    </table>
+    </ul>
+
+    <h2> OWNED e2e Tests</h2>
+    <ul>
+    <li><table >
+        <tr>
+            <th>Sig </th>
+            <th>Test File</th>
+        </tr>
+        {% for sig in owned|sort%}
+            <tr> 
+                <td>{{ sig }} </td>
+                <td></td>
+            </tr>
+          {% set count = 1 %}
+          {% for test in owned[sig] %}
+            <tr> 
+              <td></td>
+              <td>{{ count}}. {{ test }} </td>
+                {% set count = count + 1 %}
+            </tr>
+          {% endfor %}
+
+        {% endfor %}
+    </table>
+    </ul>
+
+{% endblock %}
