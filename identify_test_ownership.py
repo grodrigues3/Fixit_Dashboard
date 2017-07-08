@@ -34,6 +34,7 @@ def find_tests(k8s_root_dir):
     # just reuse the existing tooling that test infra wrote to get all tests
     cmd = "go run " + os.path.join(k8s_root_dir, "test/list/main.go")
     cmd += " " + k8s_root_dir
+    print cmd
     out = os.popen(cmd).readlines()
 
     

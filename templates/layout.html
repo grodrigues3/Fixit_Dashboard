@@ -2,9 +2,9 @@
 {% block head %}
 {% endblock %}
 
-<title>Fixit 2017: July 10-144 </title>
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css')}}">
 <div class=page>
+  <h1>Fixit 2017: July 10-14 </h1>
   {% for message in get_flashed_messages() %}
     <div class=flash>{{ message }}</div>
   {% endfor %}

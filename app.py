@@ -24,8 +24,8 @@ from identify_test_ownership import find_tests, split_tests
 app = Flask(__name__)
 logFile = '/tmp/fixit-dashboard.log'
 logSize = 1024*1024*100
+k8s_root_dir = '/go/kubernetes'
 #k8s_root_dir = '/usr/local/google/home/grod/work/src/k8s.io/kubernetes'
-k8s_root_dir = '/kubernetes'
 
 @app.errorhandler(500)
 def internal_error(exception):
